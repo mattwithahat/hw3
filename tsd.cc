@@ -70,9 +70,6 @@ using csce438::ServerListReply;
 struct Servers {
   std::string hostname;
   bool connected = true;
-  int list_file_size = 0;  // do we want the server list to be backed up?
-  std::vector<Servers*> server_list;
-  ServerReaderWriter<Message, Message>* stream = 0;
   bool operator==(const Servers& s1) const{
     return (hostname == s1.hostname);
   }
@@ -80,6 +77,8 @@ struct Servers {
 
 // Vector that stores the servers that have been connected to
 std::vector<Servers*> server_db;
+std::vector<Servers*> master_db;
+std::string server_address;
 
 struct Client {
   std::string username;
@@ -382,16 +381,31 @@ class SNSRouterServiceImpl final : public SNSService::Service {
     }
     return Status::OK;
   }
-  
-  // add master and slave servers to router connection and put them in a list for List function
-  Status ConnectToServers(ServerContext* context, const ServerRequest* request, Reply* reply) {
-    // 
-    std::string login_info = request->hostname() + ":" + request->port();
-    std::unique_ptr<SNSService::Stub> stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
-               grpc::CreateChannel(
-                    login_info, grpc::InsecureChannelCredentials())));
+
+  Status ConnectServers(ServerContext* context, const ServerRequest* request, Reply* reply) override {
+    Server* s = new Server();
+    std::string hostname = request->hostname();
+    int user_index = find_user(hostname);
+    if(user_index < 0){
+      s->hostname = hostname;
+      server_db.push_back(s);
+      reply->set_msg("Login Successful!");
+    }
+    else{
+      Client *user = client_db[user_index];
+      if(user->connected) {
+        reply->set_msg("Invalid Username");
+  return Status::OK;
+      }else{
+        std::string msg = "Welcome Back " + user->username;
+  reply->set_msg(msg);
+        user->connected = true;
+      }
+    }
+    write_userlist();
     return Status::OK;
   }
+  
 
 };
 
@@ -409,6 +423,15 @@ void RunMasterOrSlaveServer(std::string port_no, std::string router_address) {
   std::unique_ptr<SNSService::Stub> stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
              grpc::CreateChannel(
                   router_address, grpc::InsecureChannelCredentials())));
+
+  ClientContext context;
+  ServerRequest request;
+  Reply reply;
+
+  stub_->ConnectServers(&context, request, &reply);
+  
+  std::cout << "Master/slave connected to router\n";
+
   server->Wait();
 }
 
