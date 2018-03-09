@@ -90,11 +90,16 @@ int Client::connectTo()
 {
     //this is the router addr that we get from the command line flags
     std::string login_info = hostname + ":" + port;
+    
+    std::cout << "Beginning of connectTo\n";
 
     //make a new stub thing here to connect 1 time to the router to get the active_server_info
     std::unique_ptr<SNSService::Stub> stub_1_ = std::unique_ptr<SNSService::Stub>(
                                                 SNSService::NewStub(grpc::CreateChannel(
                                                 login_info, grpc::InsecureChannelCredentials())));
+
+    std::cout << "Post stub creation\n";
+    
     ClientContext context;
     Request request;
     Reply reply;
@@ -103,6 +108,7 @@ int Client::connectTo()
     std::string AShostaddr = reply.msg(); 
 
     std::string active_server_info = AShostaddr;
+    std::cout << "The active server is at " << active_server_info;
     stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
                grpc::CreateChannel(
                     active_server_info, grpc::InsecureChannelCredentials())));

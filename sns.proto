@@ -43,6 +43,8 @@ service SNSService{
   // Bidirectional streaming RPC
   rpc Timeline (stream Message) returns (stream Message) {} 
   rpc ASRequest (Request) returns (Reply) {}
+  rpc ConnectServers (ServerRequest) returns (Reply) {}
+
 }
 
 message ListReply {

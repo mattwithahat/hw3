@@ -51,6 +51,7 @@
 
 using google::protobuf::Timestamp;
 using google::protobuf::Duration;
+using grpc::ClientContext;
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -78,7 +79,7 @@ struct Servers {
 // Vector that stores the servers that have been connected to
 std::vector<Servers*> server_db;
 std::vector<Servers*> master_db;
-std::string server_addr; //for masters/slaves it is the router, for router it is the current active server
+std::string server_addr = "127.0.0.1:3012"; //for masters/slaves it is the router, for router it is the current active server
 
 struct Client {
   std::string username;
@@ -112,10 +113,7 @@ void update_stream(std::string username, ServerReaderWriter<Message, Message>* s
   if (username == c->username) c->stream = stream;
   else {
       for (Client f : c->client_followers) {
-<<<<<<< HEAD
-=======
 
->>>>>>> 9076bee2a83fb9421102c7b29554b0e813a46654
       }
   }
     }
@@ -372,26 +370,17 @@ class SNSServiceImpl final : public SNSService::Service {
   }
 
   Status ASRequest(ServerContext* context, const Request* request, Reply* reply) {
-      reply.message = "string"; 
+      std::cout << "In ASRequest function\n";
+      reply->set_msg(server_addr);
       return Status::OK;
   }
-};
 
-class SNSRouterServiceImpl final : public SNSService::Service {
-
-  // list off all the servers that are connected to the router
-  Status List(ServerContext* context, const ServerRequest* request, ServerListReply* list_reply) {
-    Servers* user = server_db[find_user(request->hostname())];
-    int index = 0;
-    for(Servers* s : server_db){
-      list_reply->add_all_servers(s->hostname);
-    }
-    return Status::OK;
-  }
-
-  Status ConnectServers(ServerContext* context, const ServerRequest* request, Reply* reply) override {
-    Server* s = new Server();
-    std::string hostname = request->hostname();
+  Status ConnectServers(ServerContext* context, const ServerRequest* request, Reply* reply) {
+    //Servers* s = new Servers();
+    // 
+    std::cout << "Hey I made it!!\n";
+    //reply->set_msg("Hey I made it!!...again...");
+    /*std::string hostname = request->hostname();
     int user_index = find_user(hostname);
     if(user_index < 0){
       s->hostname = hostname;
@@ -409,13 +398,29 @@ class SNSRouterServiceImpl final : public SNSService::Service {
         user->connected = true;
       }
     }
-    write_userlist();
+    write_userlist();*/
     return Status::OK;
   }
 };
 
-void RunMasterOrSlaveServer(std::string port_no, std::string router_address) {
-  std::string server_address = router_address;
+class SNSRouterServiceImpl final : public SNSService::Service {
+
+  // list off all the servers that are connected to the router
+  Status List(ServerContext* context, const ServerRequest* request, ServerListReply* list_reply) {
+    Servers* user = server_db[find_user(request->hostname())];
+    int index = 0;
+    for(Servers* s : server_db){
+      list_reply->add_all_servers(s->hostname);
+    }
+    return Status::OK;
+  }
+
+  
+};
+
+void RunMasterOrSlaveServer(std::string hostname, std::string port_no, std::string rtr_address) {
+  std::string router_address = rtr_address;
+  std::string server_address = hostname + ":" + port_no;
   SNSServiceImpl service;
 
   ServerBuilder builder;
@@ -433,14 +438,15 @@ void RunMasterOrSlaveServer(std::string port_no, std::string router_address) {
   ServerRequest request;
   Reply reply;
 
+  std::cout << "Master/slave connecting to router at " << router_address << "\n";
+
   stub_->ConnectServers(&context, request, &reply);
   
-  std::cout << "Master/slave connected to router\n";
-
+  std::cout << reply.msg();
   server->Wait();
 }
 
-void RunRouterServer(std::string port_no, std::string router_address) {
+void RunRouterServer(std::string router_address) {
   std::string server_address = router_address;
   SNSRouterServiceImpl service;
 
@@ -456,16 +462,19 @@ void RunRouterServer(std::string port_no, std::string router_address) {
 
 int main(int argc, char** argv) {
 
+  std::string hostname = "localhost";
   std::string port = "3011";  // this port is the master/slave port
   std::string router_address = "localhost:3000";  // this is the router server information (so that the master/slaves can connect to it)
   std::string isRouter = "0";  // 0 == false, 1 == true
   int opt = 0;
-  while ((opt = getopt(argc, argv, "r:a:p:")) != -1){
+  while ((opt = getopt(argc, argv, "r:a:h:p:")) != -1){
     switch(opt) {
       case 'r':
           isRouter = optarg;break;
       case 'a':
           router_address = optarg;break;
+      case 'h':
+          hostname = optarg;break;
       case 'p':
           port = optarg;break;
       default:
@@ -479,11 +488,11 @@ int main(int argc, char** argv) {
   // if server is master server
   if (isRouter == "0") {
     // runs server that does master server things
-    RunMasterOrSlaveServer(port, router_address);
+    RunMasterOrSlaveServer(hostname, port, router_address);
   }
   else {
   // if server is router server
-    RunRouterServer(port, router_address);
+    RunRouterServer(router_address);
   }
 
   return 0;
