@@ -68,10 +68,11 @@ using csce438::ServerRequest;
 using csce438::ServerListReply;
 
 struct Servers {
-  std::string hostname;
+  std::string hostname; //not the port, just the host
+  std::string serv_addr; //for masters/slaves it is the router, for router it is the current active server
   bool connected = true;
-  int list_file_size = 0;  // do we want the server list to be backed up?
   std::vector<Servers*> server_list;
+  std::vector<Servers*> master_list;
   ServerReaderWriter<Message, Message>* stream = 0;
   bool operator==(const Servers& s1) const{
     return (hostname == s1.hostname);
@@ -369,6 +370,10 @@ class SNSServiceImpl final : public SNSService::Service {
     return Status::OK;
   }
 
+  Status ASRequest(ServerContext* context, const Request* request, Reply* reply) {
+      reply.message = 
+      return Status::OK;
+  }
 };
 
 class SNSRouterServiceImpl final : public SNSService::Service {
@@ -383,16 +388,6 @@ class SNSRouterServiceImpl final : public SNSService::Service {
     return Status::OK;
   }
   
-  // add master and slave servers to router connection and put them in a list for List function
-  Status ConnectToServers(ServerContext* context, const ServerRequest* request, Reply* reply) {
-    // 
-    std::string login_info = request->hostname() + ":" + request->port();
-    std::unique_ptr<SNSService::Stub> stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
-               grpc::CreateChannel(
-                    login_info, grpc::InsecureChannelCredentials())));
-    return Status::OK;
-  }
-
 };
 
 void RunMasterOrSlaveServer(std::string router_addr, std::string port_no) {
@@ -426,6 +421,7 @@ int main(int argc, char** argv) {
 
   std::string port = "3010";
   int opt = 0;
+
   while ((opt = getopt(argc, argv, "p:")) != -1){
     switch(opt) {
       case 'p':
