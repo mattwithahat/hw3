@@ -73,7 +73,6 @@ message Message {
 // below is the added functionality for the servers to communicate with one another
 service SNSRouterService{
   rpc List (ServerRequest) returns (ServerListReply) {} // <-- I'm really not sure what type should be passed in for List 
-  rpc ConnectServers (ServerRequest) returns (Reply) {}
 }
 
 message ServerRequest {

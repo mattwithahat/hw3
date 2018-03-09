@@ -375,7 +375,7 @@ class SNSServiceImpl final : public SNSService::Service {
       return Status::OK;
   }
 
-  Status ConnectServers(ServerContext* context, const ServerRequest* request, Reply* reply) {
+  Status ConnectServers(ClientContext* context, const ServerRequest* request, Reply* reply) {
     //Servers* s = new Servers();
     // 
     std::cout << "Hey I made it!!\n";
@@ -427,22 +427,35 @@ void RunMasterOrSlaveServer(std::string hostname, std::string port_no, std::stri
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
   std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << "Master/slave server listening on " << server_address << std::endl;
-
+ 
   // connects to router
   std::unique_ptr<SNSService::Stub> stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
              grpc::CreateChannel(
                   router_address, grpc::InsecureChannelCredentials())));
 
+  std::cout<<"post-stub";
+
   ClientContext context;
   ServerRequest request;
   Reply reply;
+  std::cout << "pre-connect servers";
+  ////stub_->ConnectServers(&context, request, &reply);
+  //stub_->registerServer(see above);
+  //if(reply.msg == "slave"){
+  //  stub_2_ = stub connecting to master
+  //  while(TRUE){
+  //    Status sts = stub_2_->heartbeat(context, request, reply)
+  //    if(sts == ERROR_UNAVAILABLE){
+  //      break;
+  //    }
+  //    wait 1 seconds;
+  //  }
+  //  start a new slave
+  //  Status sts = stub_->declareMaster(context, request, reply);
+  //}
+  std::cout<<"post-connect-servers";
+  //std::cout << reply.msg();
 
-  std::cout << "Master/slave connecting to router at " << router_address << "\n";
-
-  stub_->ConnectServers(&context, request, &reply);
-  
-  std::cout << reply.msg();
   server->Wait();
 }
 
