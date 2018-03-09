@@ -69,11 +69,7 @@ using csce438::ServerListReply;
 
 struct Servers {
   std::string hostname; //not the port, just the host
-  std::string serv_addr; //for masters/slaves it is the router, for router it is the current active server
   bool connected = true;
-  std::vector<Servers*> server_list;
-  std::vector<Servers*> master_list;
-  ServerReaderWriter<Message, Message>* stream = 0;
   bool operator==(const Servers& s1) const{
     return (hostname == s1.hostname);
   }
@@ -81,6 +77,8 @@ struct Servers {
 
 // Vector that stores the servers that have been connected to
 std::vector<Servers*> server_db;
+std::vector<Servers*> master_db;
+std::string server_addr; //for masters/slaves it is the router, for router it is the current active server
 
 struct Client {
   std::string username;
@@ -371,7 +369,7 @@ class SNSServiceImpl final : public SNSService::Service {
   }
 
   Status ASRequest(ServerContext* context, const Request* request, Reply* reply) {
-      reply.message = 
+      reply.message =  
       return Status::OK;
   }
 };
