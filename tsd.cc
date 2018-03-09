@@ -112,6 +112,10 @@ void update_stream(std::string username, ServerReaderWriter<Message, Message>* s
   if (username == c->username) c->stream = stream;
   else {
       for (Client f : c->client_followers) {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9076bee2a83fb9421102c7b29554b0e813a46654
       }
   }
     }
