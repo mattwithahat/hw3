@@ -395,54 +395,68 @@ class SNSRouterServiceImpl final : public SNSService::Service {
 
 };
 
-void RunMasterOrSlaveServer(std::string router_addr, std::string port_no) {
-  std::string server_address = "0.0.0.0:"+port_no;
+void RunMasterOrSlaveServer(std::string port_no, std::string router_address) {
+  std::string server_address = router_address;
   SNSServiceImpl service;
 
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
-  //std::unique_ptr<Servers> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
+  std::unique_ptr<Server> server(builder.BuildAndStart());
+  std::cout << "Master/slave server listening on " << server_address << std::endl;
 
-  //server->Wait();
+  // connects to router
+  std::unique_ptr<SNSService::Stub> stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
+             grpc::CreateChannel(
+                  router_address, grpc::InsecureChannelCredentials())));
+  server->Wait();
 }
 
-void RunRouterServer(std::string port_no) {
-  std::string server_address = "0.0.0.0:"+port_no;
+void RunRouterServer(std::string port_no, std::string router_address) {
+  std::string server_address = router_address;
   SNSRouterServiceImpl service;
 
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service);
-  //std::unique_ptr<Servers> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
+  std::unique_ptr<Server> server(builder.BuildAndStart());
+  std::cout << "Routing server listening on " << server_address << std::endl;
 
-  //server->Wait();
+  server->Wait();
 }
 
 
 int main(int argc, char** argv) {
 
-  std::string port = "3010";
+  std::string port = "3011";  // this port is the master/slave port
+  std::string router_address = "localhost:3000";  // this is the router server information (so that the master/slaves can connect to it)
+  std::string isRouter = "0";  // 0 == false, 1 == true
   int opt = 0;
-  while ((opt = getopt(argc, argv, "p:")) != -1){
+  while ((opt = getopt(argc, argv, "r:a:p:")) != -1){
     switch(opt) {
+      case 'r':
+          isRouter = optarg;break;
+      case 'a':
+          router_address = optarg;break;
       case 'p':
-          port = optarg;break;
+          port = optarg;std::cout << "case p" << port;break;
       default:
-	  std::cerr << "Invalid Command Line Argument\n";
+    std::cerr << "Invalid Command Line Argument\n";
     }
   }
 
   read_userlist();
+  printf("\n");
 
   // if server is master server
+  if (isRouter == "0") {
     // runs server that does master server things
-    RunMasterOrSlaveServer(port);
-
+    RunMasterOrSlaveServer(port, router_address);
+  }
+  else {
   // if server is router server
-    RunRouterServer(port);
+    RunRouterServer(port, router_address);
+  }
 
   return 0;
 }
