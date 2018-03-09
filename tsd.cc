@@ -109,12 +109,12 @@ int find_user(std::string username){
 void update_stream(std::string username, ServerReaderWriter<Message, Message>* stream) {
 /*
     for (Client* c : client_db) {
-	if (username == c->username) c->stream = stream;
-	else {
-	    for (Client f : c->client_followers) {
+  if (username == c->username) c->stream = stream;
+  else {
+      for (Client f : c->client_followers) {
 
-	    }
-	}
+      }
+  }
     }
 */
 }
@@ -123,16 +123,16 @@ void write_userlist() {
     std::string filename = "userlist.txt";
     std::ofstream user_file(filename,std::ios::trunc|std::ios::out|std::ios::in);
     for (Client* c : client_db) {
-	user_file << c->username << " " << c->following_file_size << std::endl;
-	std::vector<Client*>::const_iterator it;
-	for(it = c->client_followers.begin(); it != c->client_followers.end(); it++) {
-	    user_file << (*it)->username << " ";
-	}
-	user_file << std::endl;
-	for(it = c->client_following.begin(); it != c->client_following.end(); it++) {
-	    user_file << (*it)->username << " ";
-	}
-	user_file << std::endl;
+  user_file << c->username << " " << c->following_file_size << std::endl;
+  std::vector<Client*>::const_iterator it;
+  for(it = c->client_followers.begin(); it != c->client_followers.end(); it++) {
+      user_file << (*it)->username << " ";
+  }
+  user_file << std::endl;
+  for(it = c->client_following.begin(); it != c->client_following.end(); it++) {
+      user_file << (*it)->username << " ";
+  }
+  user_file << std::endl;
     }
 }
 
@@ -143,55 +143,55 @@ void read_userlist() {
 
     std::string line1;
     while(getline(in, line1)) {
-	Client* c = new Client();
-	std::stringstream s_line1(line1);
-	std::string username;
-	std::string file_size;
+  Client* c = new Client();
+  std::stringstream s_line1(line1);
+  std::string username;
+  std::string file_size;
 
-	getline(s_line1, username, ' ');
-	getline(s_line1, file_size, ' ');
-	c->username = username;
-	c->following_file_size = std::atoi(file_size.c_str());
-	client_db.push_back(c);
+  getline(s_line1, username, ' ');
+  getline(s_line1, file_size, ' ');
+  c->username = username;
+  c->following_file_size = std::atoi(file_size.c_str());
+  client_db.push_back(c);
 
-	std::string line2, line3, item;
-	std::vector<std::string> v_followers,  v_followings;
-	getline(in, line2);
-	std::stringstream s_line2(line2);
-	while (getline(s_line2, item, ' ')) {
-	    v_followers.push_back(item);
-	}
-	followers[username] = v_followers;
+  std::string line2, line3, item;
+  std::vector<std::string> v_followers,  v_followings;
+  getline(in, line2);
+  std::stringstream s_line2(line2);
+  while (getline(s_line2, item, ' ')) {
+      v_followers.push_back(item);
+  }
+  followers[username] = v_followers;
 
-	getline(in, line3);
-	std::stringstream s_line3(line3);
-	while (getline(s_line3, item, ' ')) {
-	    v_followings.push_back(item);
-	}
-	followings[username] = v_followings;
+  getline(in, line3);
+  std::stringstream s_line3(line3);
+  while (getline(s_line3, item, ' ')) {
+      v_followings.push_back(item);
+  }
+  followings[username] = v_followings;
     }
 
     std::map<std::string, std::vector<std::string>>::iterator it;
     for (it = followers.begin(); it != followers.end(); it++) {
-	std::string username = it->first;
-	std::vector<std::string> v_followers = it->second;
-	Client* user = client_db[find_user(username)];
+  std::string username = it->first;
+  std::vector<std::string> v_followers = it->second;
+  Client* user = client_db[find_user(username)];
 
-	std::vector<std::string>::const_iterator itt;
-	for (itt = v_followers.begin(); itt != v_followers.end(); itt++) {
-	    user->client_followers.push_back(client_db[find_user(*itt)]);
-	}
+  std::vector<std::string>::const_iterator itt;
+  for (itt = v_followers.begin(); itt != v_followers.end(); itt++) {
+      user->client_followers.push_back(client_db[find_user(*itt)]);
+  }
 
     }
     for (it = followings.begin(); it != followings.end(); it++) {
-	std::string username = it->first;
-	std::vector<std::string> v_followings = it->second;
-	Client* user = client_db[find_user(username)];
+  std::string username = it->first;
+  std::vector<std::string> v_followings = it->second;
+  Client* user = client_db[find_user(username)];
 
-	std::vector<std::string>::const_iterator itt;
-	for (itt = v_followings.begin(); itt != v_followings.end(); itt++) {
-	    user->client_following.push_back(client_db[find_user(*itt)]);
-	}
+  std::vector<std::string>::const_iterator itt;
+  for (itt = v_followings.begin(); itt != v_followings.end(); itt++) {
+      user->client_following.push_back(client_db[find_user(*itt)]);
+  }
     }
 
 
@@ -220,25 +220,25 @@ class SNSServiceImpl final : public SNSService::Service {
     if(join_index < 0 || username1 == username2)
       reply->set_msg("Follow Failed -- Invalid Username");
     else{
-	    Client *user1 = client_db[find_user(username1)];
-	    Client *user2 = client_db[join_index];
-	    if(std::find(user1->client_following.begin(), user1->client_following.end(), user2) != user1->client_following.end()){
-		    reply->set_msg("Follow Failed -- Already Following User");
-		    return Status::OK;
-	    }
-	    user1->client_following.push_back(user2);
-	    user2->client_followers.push_back(user1);
-	    reply->set_msg("Follow Successful");
+      Client *user1 = client_db[find_user(username1)];
+      Client *user2 = client_db[join_index];
+      if(std::find(user1->client_following.begin(), user1->client_following.end(), user2) != user1->client_following.end()){
+        reply->set_msg("Follow Failed -- Already Following User");
+        return Status::OK;
+      }
+      user1->client_following.push_back(user2);
+      user2->client_followers.push_back(user1);
+      reply->set_msg("Follow Successful");
 
-	    for (Client* c : client_db) {
-		    std::string filename = c->username + "followers.txt";
-		    std::ofstream user_file(filename,std::ios::trunc|std::ios::out|std::ios::in);
-		    std::vector<Client*>::const_iterator it;
-		    for(it = c->client_followers.begin(); it!=c->client_followers.end(); it++) {
-			    user_file << (*it)->username << std::endl;
-		    }
-	    }
-	    write_userlist();
+      for (Client* c : client_db) {
+        std::string filename = c->username + "followers.txt";
+        std::ofstream user_file(filename,std::ios::trunc|std::ios::out|std::ios::in);
+        std::vector<Client*>::const_iterator it;
+        for(it = c->client_followers.begin(); it!=c->client_followers.end(); it++) {
+          user_file << (*it)->username << std::endl;
+        }
+      }
+      write_userlist();
     }
     return Status::OK;
   }
@@ -253,19 +253,19 @@ class SNSServiceImpl final : public SNSService::Service {
       Client *user1 = client_db[find_user(username1)];
       Client *user2 = client_db[leave_index];
       if(std::find(user1->client_following.begin(), user1->client_following.end(), user2) == user1->client_following.end()){
-	reply->set_msg("UnFollow Failed -- Not Following User");
+  reply->set_msg("UnFollow Failed -- Not Following User");
         return Status::OK;
       }
       user1->client_following.erase(find(user1->client_following.begin(), user1->client_following.end(), user2));
       user2->client_followers.erase(find(user2->client_followers.begin(), user2->client_followers.end(), user1));
       reply->set_msg("UnFollow Successful");
       for (Client* c : client_db) {
-	      std::string filename = c->username + "followers.txt";
-	      std::ofstream user_file(filename,std::ios::trunc|std::ios::out|std::ios::in);
-	      std::vector<Client*>::const_iterator it;
-	      for(it = c->client_followers.begin(); it!=c->client_followers.end(); it++) {
-		      user_file << (*it)->username << std::endl;
-	      }
+        std::string filename = c->username + "followers.txt";
+        std::ofstream user_file(filename,std::ios::trunc|std::ios::out|std::ios::in);
+        std::vector<Client*>::const_iterator it;
+        for(it = c->client_followers.begin(); it!=c->client_followers.end(); it++) {
+          user_file << (*it)->username << std::endl;
+        }
       }
       write_userlist();
     }
@@ -287,10 +287,10 @@ class SNSServiceImpl final : public SNSService::Service {
       Client *user = client_db[user_index];
       if(user->connected) {
         reply->set_msg("Invalid Username");
-	return Status::OK;
+  return Status::OK;
       }else{
         std::string msg = "Welcome Back " + user->username;
-	reply->set_msg(msg);
+  reply->set_msg(msg);
         user->connected = true;
       }
     }
@@ -299,7 +299,7 @@ class SNSServiceImpl final : public SNSService::Service {
   }
 
   Status Timeline(ServerContext* context,
-		ServerReaderWriter<Message, Message>* stream) override {
+    ServerReaderWriter<Message, Message>* stream) override {
     Message message;
     Client *c;
     while(stream->Read(&message)) {
@@ -318,10 +318,10 @@ class SNSServiceImpl final : public SNSService::Service {
         user_file << fileinput;
       //If message = "Set Stream", print the first 20 chats from the people you follow
       else{
-	  if(c->stream==0) {
-	      c->stream = stream;
-	      update_stream(c->username, stream);
-	  }
+    if(c->stream==0) {
+        c->stream = stream;
+        update_stream(c->username, stream);
+    }
         std::string line;
         std::vector<std::string> newest_twenty;
         std::ifstream in(username+"following.txt");
@@ -329,17 +329,17 @@ class SNSServiceImpl final : public SNSService::Service {
         //Read the last up-to-20 lines (newest 20 messages) from userfollowing.txt
         while(getline(in, line)){
           if(c->following_file_size > 20){
-	    if(count < c->following_file_size-20){
+      if(count < c->following_file_size-20){
               count++;
-	      continue;
+        continue;
             }
           }
           newest_twenty.push_back(line);
         }
         Message new_msg;
- 	//Send the newest messages to the client to be displayed
-	for(int i = 0; i<newest_twenty.size(); i++){
-	  new_msg.set_msg(newest_twenty[i]);
+  //Send the newest messages to the client to be displayed
+  for(int i = 0; i<newest_twenty.size(); i++){
+    new_msg.set_msg(newest_twenty[i]);
           stream->Write(new_msg);
         }
         continue;
@@ -348,19 +348,19 @@ class SNSServiceImpl final : public SNSService::Service {
       std::vector<Client*>::const_iterator it;
       for(it = c->client_followers.begin(); it!=c->client_followers.end(); it++){
         Client *temp_client = *it;
-      	if(temp_client->stream!=0 && temp_client->connected && temp_client->username != c->username) {
-	  message.set_msg(fileinput);
-	  temp_client->stream->Write(message);
-	  }
+        if(temp_client->stream!=0 && temp_client->connected && temp_client->username != c->username) {
+    message.set_msg(fileinput);
+    temp_client->stream->Write(message);
+    }
         //For each of the current user's followers, put the message in their following.txt file
         std::string temp_username = temp_client->username;
         std::string temp_file = temp_username + "following.txt";
-	std::ofstream following_file(temp_file,std::ios::app|std::ios::out|std::ios::in);
-	following_file << fileinput;
+  std::ofstream following_file(temp_file,std::ios::app|std::ios::out|std::ios::in);
+  following_file << fileinput;
         temp_client->following_file_size++;
-	std::ofstream user_file(temp_username + ".txt",std::ios::app|std::ios::out|std::ios::in);
+  std::ofstream user_file(temp_username + ".txt",std::ios::app|std::ios::out|std::ios::in);
         user_file << fileinput;
-	write_userlist();
+  write_userlist();
       }
     }
     //If the client disconnected from Chat Mode, set connected to false
@@ -385,7 +385,30 @@ class SNSRouterServiceImpl final : public SNSService::Service {
     }
     return Status::OK;
   }
-  
+
+  Status ConnectServers(ServerContext* context, const ServerRequest* request, Reply* reply) override {
+    Server* s = new Server();
+    std::string hostname = request->hostname();
+    int user_index = find_user(hostname);
+    if(user_index < 0){
+      s->hostname = hostname;
+      server_db.push_back(s);
+      reply->set_msg("Login Successful!");
+    }
+    else{
+      Client *user = client_db[user_index];
+      if(user->connected) {
+        reply->set_msg("Invalid Username");
+  return Status::OK;
+      }else{
+        std::string msg = "Welcome Back " + user->username;
+  reply->set_msg(msg);
+        user->connected = true;
+      }
+    }
+    write_userlist();
+    return Status::OK;
+  }
 };
 
 void RunMasterOrSlaveServer(std::string port_no, std::string router_address) {
@@ -402,6 +425,15 @@ void RunMasterOrSlaveServer(std::string port_no, std::string router_address) {
   std::unique_ptr<SNSService::Stub> stub_ = std::unique_ptr<SNSService::Stub>(SNSService::NewStub(
              grpc::CreateChannel(
                   router_address, grpc::InsecureChannelCredentials())));
+
+  ClientContext context;
+  ServerRequest request;
+  Reply reply;
+
+  stub_->ConnectServers(&context, request, &reply);
+  
+  std::cout << "Master/slave connected to router\n";
+
   server->Wait();
 }
 
@@ -432,7 +464,7 @@ int main(int argc, char** argv) {
       case 'a':
           router_address = optarg;break;
       case 'p':
-          port = optarg;std::cout << "case p" << port;break;
+          port = optarg;break;
       default:
     std::cerr << "Invalid Command Line Argument\n";
     }
